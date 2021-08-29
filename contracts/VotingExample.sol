@@ -5,14 +5,30 @@ pragma solidity ^0.7.3;
 import { Semaphore } from "./Semaphore.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
+/**
+ * People are allowed to cast 2 votes privately
+ */
 contract Voting is Semaphore, Ownable {
-    constructor(address hasher) Semaphore(hasher) {}
-
-    function addCandidates(uint256 candidates) external onlyOwner {
-        addExternalNullifier(candidates);
+    struct Proposal {
+        bytes32 name;
+        uint256 voteCount;
     }
 
-    function addVoters(bytes32 identityCommitment) external onlyOwner {
+    Proposal[] public proposals;
+
+    constructor(address hasher, bytes32[] memory proposalNames)
+        Semaphore(hasher)
+    {
+        for (uint256 i = 0; i < proposalNames.length; i++) {
+            proposals.push(Proposal({ name: proposalNames[i], voteCount: 0 }));
+        }
+        // First vote
+        addExternalNullifier(0);
+        // Second vote
+        addExternalNullifier(1);
+    }
+
+    function addVoter(bytes32 identityCommitment) external onlyOwner {
         insertIdentity(identityCommitment);
     }
 
@@ -22,17 +38,24 @@ contract Voting is Semaphore, Ownable {
         uint256[2] calldata proofC,
         bytes32 root,
         uint256 nullifiersHash,
-        uint232 externalNullifier,
-        bytes calldata signal
+        uint256 externalNullifier,
+        uint256 proposalID
     ) external {
-        broadcastSignal(
-            proofA,
-            proofB,
-            proofC,
-            root,
-            nullifiersHash,
-            externalNullifier,
-            signal
+        require(proposalID < proposals.length, "Voting: Invalid proposalID");
+        bytes memory signal = abi.encodePacked(proposalID);
+        require(
+            broadcastSignal(
+                proofA,
+                proofB,
+                proofC,
+                root,
+                nullifiersHash,
+                externalNullifier,
+                signal
+            ),
+            "Voting: Failing to broadcast signal"
         );
+
+        proposals[proposalID].voteCount++;
     }
 }

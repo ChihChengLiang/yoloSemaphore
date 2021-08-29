@@ -12,6 +12,7 @@ contract Semaphore is Verifier, MerkleTreeWithHistory {
 
     mapping(uint256 => bool) public nullifierHashHistory;
 
+    event IdentityAdd(bytes32 indexed commitment, uint32 leafIndex);
     event ExternalNullifierAdd(uint256 indexed externalNullifier);
 
     // treeHeight in the contract needs to match the treeHeight in the circuit
@@ -23,16 +24,20 @@ contract Semaphore is Verifier, MerkleTreeWithHistory {
         internal
         returns (uint32)
     {
-        return _insert(identityCommitment);
+        uint32 leafIndex = _insert(identityCommitment);
+        emit IdentityAdd(identityCommitment, leafIndex);
     }
 
     function addExternalNullifier(uint256 externalNullifier) internal {
-        uint256 en = externalNullifier % FIELD_SIZE;
         require(
-            externalNullifierMapping[en] == false,
+            externalNullifier < FIELD_SIZE,
+            "Semaphore: external nullifier should be lt the field sizee"
+        );
+        require(
+            externalNullifierMapping[externalNullifier] == false,
             "Semaphore: external nullifier already exists"
         );
-        externalNullifierMapping[en] = true;
+        externalNullifierMapping[externalNullifier] = true;
         emit ExternalNullifierAdd(externalNullifier);
         nextExternalNullifier++;
     }
@@ -45,7 +50,7 @@ contract Semaphore is Verifier, MerkleTreeWithHistory {
         uint256 nullifiersHash,
         uint256 externalNullifier,
         bytes memory signal
-    ) internal {
+    ) internal returns (bool success) {
         require(
             nullifierHashHistory[nullifiersHash] == false,
             "Semaphore: nullifier already seen"
@@ -56,10 +61,10 @@ contract Semaphore is Verifier, MerkleTreeWithHistory {
         );
         require(isKnownRoot(root), "Semaphore: root not seen");
         uint256[4] memory publicSignals = [
-            uint256(root),
             nullifiersHash,
-            uint256(keccak256(signal)),
-            externalNullifier
+            externalNullifier,
+            uint256(root),
+            uint256(keccak256(signal))
         ];
         require(
             verifyProof(proofA, proofB, proofC, publicSignals),
@@ -68,5 +73,6 @@ contract Semaphore is Verifier, MerkleTreeWithHistory {
 
         // Store the nullifiers hash to prevent double-signalling
         nullifierHashHistory[nullifiersHash] = true;
+        return true;
     }
 }
