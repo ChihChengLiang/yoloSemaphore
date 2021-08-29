@@ -15,7 +15,7 @@ template Semaphore(levels) {
     signal output root;
     signal output nullifiersHash;
 
-    component identityCommitment = Poseidon(3);
+    component identityCommitment = Poseidon(2);
     identityCommitment.inputs[0] <== identityNullifier;
     identityCommitment.inputs[1] <== 0;
 
