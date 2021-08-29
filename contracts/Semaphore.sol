@@ -14,9 +14,10 @@ contract Semaphore is Verifier, MerkleTreeWithHistory {
 
     event ExternalNullifierAdd(uint256 indexed externalNullifier);
 
-    constructor(uint32 _treeLevels, address _hasher)
-        MerkleTreeWithHistory(_treeLevels, _hasher)
-    {}
+    // treeHeight in the contract needs to match the treeHeight in the circuit
+    uint32 public constant treeHeight = 20;
+
+    constructor(address hasher) MerkleTreeWithHistory(treeHeight, hasher) {}
 
     function insertIdentity(bytes32 identityCommitment)
         internal

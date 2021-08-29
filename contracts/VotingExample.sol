@@ -6,7 +6,7 @@ import { Semaphore } from "./Semaphore.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Voting is Semaphore, Ownable {
-    constructor(address _hasher) Semaphore(32, _hasher) {}
+    constructor(address hasher) Semaphore(hasher) {}
 
     function addCandidates(uint256 candidates) external onlyOwner {
         addExternalNullifier(candidates);
