@@ -1,0 +1,38 @@
+{
+  "name": "semaphore-2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run compile:circuits && npm run setup && npm run compile",
+    "compile": "hardhat compile && typechain --out-dir types --target ethers-v5 './artifacts/contracts/**/!(*.dbg).json'",
+    "compile:circuits": "mkdir -p build && circom circuits/semaphore.circom -r build/semaphore.r1cs -w build/semaphore.wasm",
+    "setup": "sh quickSetup.sh",
+    "info": "snarkjs info -r build/semaphore.r1cs",
+    "test": "hardhat test tests/*",
+    "format": "prettier --write .",
+    "lint": "prettier --check ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@openzeppelin/contracts": "^3.4.1",
+    "@typechain/ethers-v5": "^7.0.1",
+    "@types/chai": "^4.2.21",
+    "@types/mocha": "^8.2.3",
+    "@types/node": "^16.6.0",
+    "chai": "^4.3.4",
+    "circom": "^0.5.45",
+    "circomlib": "^0.5.3",
+    "ethers": "^5.4.4",
+    "hardhat": "^2.6.0",
+    "mocha": "^9.0.3",
+    "prettier": "2.3.2",
+    "snarkjs": "^0.4.6",
+    "ts-node": "^10.2.0",
+    "typechain": "^5.1.2",
+    "typescript": "^4.3.5"
+  }
+}
